@@ -8,7 +8,8 @@
 #include "SevSeg.h"
 
 
-#define SERIAL_DEBUG_TESTBED
+#define SERIAL_DEBUG
+#define SD_DATALOG
 
 
 /** I2C **/

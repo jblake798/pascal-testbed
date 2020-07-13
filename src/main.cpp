@@ -4,7 +4,7 @@
 void setup() {
 
   /** SERIAL **/
-#ifdef SERIAL_DEBUG_TESTBED
+#ifdef SERIAL_DEBUG
   Serial.begin(9600);
   while (!Serial);
 
@@ -50,7 +50,7 @@ void setup() {
   gpsPort.begin(115200);
 
   /** SERIAL **/
-#ifdef SERIAL_DEBUG_TESTBED
+#ifdef SERIAL_DEBUG
   Serial.println(F("Finished Setup!"));
   Serial.println(F("Data will be sent to Serial when GPS connection is established."));
   Serial.println(F("Time/Date\tAltitude\tYaw\tPitch\tRoll\tLatitude\tLongitude\tLocAge\tSatellites"));
@@ -186,7 +186,7 @@ void loop() {
 
 
   /** SERIAL **/
-#ifdef SERIAL_DEBUG_TESTBED
+#ifdef SERIAL_DEBUG
   String dataString = "";
   dataString += String(year());
   dataString += String(month());
