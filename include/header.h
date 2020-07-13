@@ -6,6 +6,7 @@
 #include "MPU9250.h"
 #include "quaternionFilters.h"
 #include "SevSeg.h"
+#include "SdFat.h"
 
 
 #define SERIAL_DEBUG
