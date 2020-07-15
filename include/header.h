@@ -2,6 +2,7 @@
 #include <i2c_t3.h>
 #include <TimeLib.h>
 #include <TinyGPS.h>
+#include <SPI.h>
 #include "SparkFunMPL3115A2.h"
 #include "MPU9250.h"
 #include "quaternionFilters.h"
@@ -45,6 +46,14 @@ const int offset = -5;  // Eastern Standard Time (USA)
 //const int offset = -4;  // Eastern Daylight Time (USA)
 
 
+/** SD CARD **/
+#define error(msg) sd.errorHalt(F(msg))
+
+const uint8_t chipSelect = SS;              // SD chip select pin.  Be sure to disable any other SPI devices such as Enet.
+const uint32_t SAMPLE_INTERVAL_MS = 1000;   // Interval between data records in milliseconds.
+SdFat sd;
+SdFile file;
+
 /** SWITCHES **/
 // set pin numbers:
 const int SW1 = 39;
@@ -78,4 +87,4 @@ elapsedMillis display_timer = 0;
 elapsedMicros micros_timer = 0;
 elapsedMillis millis_timer = 0;
 long timer_result = -1;
-time_t prevDisplay = 0; // when the digital clock was displayed
+time_t prevDisplay = 0; // when the serial terminal was updated
