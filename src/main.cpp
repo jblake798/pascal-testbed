@@ -12,7 +12,7 @@ void setup() {
   while (!Serial.available());
 
   Serial.println(F("Beginning sketch!"));
-#endif
+#endif  // SERIAL_DEBUG
 
   /** SWITCHES **/
   pinMode(SW1, INPUT_PULLUP);
@@ -49,12 +49,26 @@ void setup() {
   /** GPS **/
   gpsPort.begin(115200);
 
+  /** SD CARD **/
+#ifdef SD_DATALOG
+  if (!sd.begin(chipSelect, SD_SCK_MHZ(50))) {
+  #ifdef SERIAL_DEBUG
+    sd.initErrorHalt();
+  #endif
+    LED_STATE = LOW;
+    digitalWrite(LED, LED_STATE); // 1 us
+  } else {
+    LED_STATE = HIGH;
+    digitalWrite(LED, LED_STATE); // 1 us
+  }
+#endif  // SD_DATALOG
+
   /** SERIAL **/
 #ifdef SERIAL_DEBUG
   Serial.println(F("Finished Setup!"));
   Serial.println(F("Data will be sent to Serial when GPS connection is established."));
   Serial.println(F("Time/Date\tAltitude\tYaw\tPitch\tRoll\tLatitude\tLongitude\tLocAge\tSatellites"));
-#endif
+#endif  // SERIAL_DEBUG
 
 }
 
@@ -185,8 +199,9 @@ void loop() {
   sevseg.refreshDisplay(); // Must run every loop, takes 1-2 micros
 
 
-  /** SERIAL **/
+  /** SERIAL AND SD CARD **/
 #ifdef SERIAL_DEBUG
+#ifdef SD_DATALOG
   String dataString = "";
   dataString += String(year());
   dataString += String(month());
@@ -217,11 +232,66 @@ void loop() {
   dataString += String(age);
   dataString += "\t";
   dataString += String(gps.satellites());
+#endif  // SD_DATALOG
+#endif  // SERIAL_DEBUG
 
-  if (now() != prevDisplay) { //update the display only if the time has changed
-    prevDisplay = now();
+
+  /** SERIAL **/
+#ifdef SERIAL_DEBUG
+  if (now() != prevSerialDisplay) { //update the display only every second
+    prevSerialDisplay = now();
     Serial.println(dataString);
   }
-#endif
+#endif  // SERIAL_DEBUG
+
+
+  /** SD CARD **/
+#ifdef SD_DATALOG
+  if ((timeStatus() != timeNotSet) && (year() >= 2020)) {   // log data only if gps connection has been established / time is set
+    if (now() != prevSDRecord) {   // log data only if the time has changed (every second)
+      prevSDRecord = now();
+
+      if ((currentFileStart == 0) || (hour() != hour(currentFileStart))) {
+        currentFileStart = now();
+
+        sprintf(fileName, "%4d%02d%02d_%02d00.CSV", year(currentFileStart), month(currentFileStart), day(currentFileStart),
+                hour(currentFileStart), minute(currentFileStart), second(currentFileStart));
+
+        if (!file.open(fileName, O_WRONLY | O_CREAT | O_EXCL)) {
+        #ifdef SERIAL_DEBUG
+          error("file.open");
+        #endif
+
+        } else {
+          file.print(F("Time/Date\tAltitude\tYaw\tPitch\tRoll\tLatitude\tLongitude\tLocAge\tSatellites"));
+          file.println();
+          file.close();
+
+          // if (!file.sync() || file.getWriteError()) {
+          // #ifdef SERIAL_DEBUG
+          //   error("write error");
+          // #endif
+          // }
+        }
+      }
+
+      if (!file.open(fileName, O_WRONLY | O_CREAT | O_EXCL)) {
+      #ifdef SERIAL_DEBUG
+        error("file.open");
+      #endif
+
+      } else {
+        file.println(dataString);
+        file.close();
+
+        // if (!file.sync() || file.getWriteError()) {
+        // #ifdef SERIAL_DEBUG
+        //   error("write error");
+        // #endif
+        // }
+      }
+    }
+  }
+#endif  // SD_DATALOG
 
 }

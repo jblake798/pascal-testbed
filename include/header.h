@@ -47,12 +47,17 @@ const int offset = -5;  // Eastern Standard Time (USA)
 
 
 /** SD CARD **/
+#ifdef SD_DATALOG
 #define error(msg) sd.errorHalt(F(msg))
 
 const uint8_t chipSelect = SS;              // SD chip select pin.  Be sure to disable any other SPI devices such as Enet.
 const uint32_t SAMPLE_INTERVAL_MS = 1000;   // Interval between data records in milliseconds.
 SdFat sd;
 SdFile file;
+char fileName[20] = {'\0'};
+time_t currentFileStart = 0;
+#endif  // SD_DATALOG
+
 
 /** SWITCHES **/
 // set pin numbers:
@@ -87,4 +92,5 @@ elapsedMillis display_timer = 0;
 elapsedMicros micros_timer = 0;
 elapsedMillis millis_timer = 0;
 long timer_result = -1;
-time_t prevDisplay = 0; // when the serial terminal was updated
+time_t prevSDRecord = 0; // when the SD Card was last updated
+time_t prevSerialDisplay = 0; // when the Serial was last updated
