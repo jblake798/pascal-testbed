@@ -67,7 +67,7 @@ void setup() {
 #ifdef SERIAL_DEBUG_PASCAL
   Serial.println(F("Finished Setup!"));
   Serial.println(F("Data will be sent to Serial when GPS connection is established."));
-  Serial.println(F("Time/Date\tAltitude\tYaw\tPitch\tRoll\tLatitude\tLongitude\tLocAge\tSatellites"));
+  Serial.println(F("Date\t\tTime\t\tAlt\tYaw\tPitch\tRoll\tLat\tLong\tAge\tSats"));
 #endif  // SERIAL_DEBUG_PASCAL
 
 }
@@ -210,7 +210,7 @@ void loop() {
     dataString += String(month());
     if (day() < 10) dataString += "0";
     dataString += String(day());
-    dataString += " ";
+    dataString += "\t";
     if (hour() < 10) dataString += "0";
     dataString += String(hour());
     dataString += ":";
