@@ -4,7 +4,7 @@
 void setup() {
 
   /** SERIAL **/
-#ifdef SERIAL_DEBUG
+#ifdef SERIAL_DEBUG_PASCAL
   Serial.begin(9600);
   while (!Serial);
 
@@ -12,7 +12,7 @@ void setup() {
   while (!Serial.available());
 
   Serial.println(F("Beginning sketch!"));
-#endif  // SERIAL_DEBUG
+#endif  // SERIAL_DEBUG_PASCAL
 
   /** SWITCHES **/
   pinMode(SW1, INPUT_PULLUP);
@@ -50,25 +50,25 @@ void setup() {
   gpsPort.begin(115200);
 
   /** SD CARD **/
-#ifdef SD_DATALOG
+#ifdef SD_DATALOG_PASCAL
   if (!sd.begin(chipSelect, SD_SCK_MHZ(50))) {
-  #ifdef SERIAL_DEBUG
-    sd.initErrorHalt();
-  #endif
-    LED_STATE = LOW;
-    digitalWrite(LED, LED_STATE); // 1 us
-  } else {
     LED_STATE = HIGH;
     digitalWrite(LED, LED_STATE); // 1 us
+#ifdef SERIAL_DEBUG_PASCAL
+    sd.initErrorHalt();
+#endif  // SERIAL_DEBUG_PASCALb 
+  } else {
+    LED_STATE = LOW;
+    digitalWrite(LED, LED_STATE); // 1 us
   }
-#endif  // SD_DATALOG
+#endif  // SD_DATALOG_PASCAL
 
   /** SERIAL **/
-#ifdef SERIAL_DEBUG
+#ifdef SERIAL_DEBUG_PASCAL
   Serial.println(F("Finished Setup!"));
   Serial.println(F("Data will be sent to Serial when GPS connection is established."));
   Serial.println(F("Time/Date\tAltitude\tYaw\tPitch\tRoll\tLatitude\tLongitude\tLocAge\tSatellites"));
-#endif  // SERIAL_DEBUG
+#endif  // SERIAL_DEBUG_PASCAL
 
 }
 
@@ -200,8 +200,8 @@ void loop() {
 
 
   /** SERIAL AND SD CARD **/
-#ifdef SERIAL_DEBUG
-#ifdef SD_DATALOG
+#ifdef SERIAL_DEBUG_PASCAL
+#ifdef SD_DATALOG_PASCAL
   String dataString = "";
   dataString += String(year());
   dataString += String(month());
@@ -232,21 +232,21 @@ void loop() {
   dataString += String(age);
   dataString += "\t";
   dataString += String(gps.satellites());
-#endif  // SD_DATALOG
-#endif  // SERIAL_DEBUG
+#endif  // SD_DATALOG_PASCAL
+#endif  // SERIAL_DEBUG_PASCAL
 
 
   /** SERIAL **/
-#ifdef SERIAL_DEBUG
+#ifdef SERIAL_DEBUG_PASCAL
   if (now() != prevSerialDisplay) { //update the display only every second
     prevSerialDisplay = now();
     Serial.println(dataString);
   }
-#endif  // SERIAL_DEBUG
+#endif  // SERIAL_DEBUG_PASCAL
 
 
   /** SD CARD **/
-#ifdef SD_DATALOG
+#ifdef SD_DATALOG_PASCAL
   if ((timeStatus() != timeNotSet) && (year() >= 2020)) {   // log data only if gps connection has been established / time is set
     if (now() != prevSDRecord) {   // log data only if the time has changed (every second)
       prevSDRecord = now();
@@ -255,12 +255,12 @@ void loop() {
         currentFileStart = now();
 
         sprintf(fileName, "%4d%02d%02d_%02d00.CSV", year(currentFileStart), month(currentFileStart), day(currentFileStart),
-                hour(currentFileStart), minute(currentFileStart), second(currentFileStart));
+                hour(currentFileStart));
 
         if (!file.open(fileName, O_WRONLY | O_CREAT | O_EXCL)) {
-        #ifdef SERIAL_DEBUG
+#ifdef SERIAL_DEBUG_PASCAL
           error("file.open");
-        #endif
+#endif  // SERIAL_DEBUG_PASCAL
 
         } else {
           file.print(F("Time/Date\tAltitude\tYaw\tPitch\tRoll\tLatitude\tLongitude\tLocAge\tSatellites"));
@@ -268,30 +268,30 @@ void loop() {
           file.close();
 
           // if (!file.sync() || file.getWriteError()) {
-          // #ifdef SERIAL_DEBUG
+          // #ifdef SERIAL_DEBUG_PASCAL
           //   error("write error");
-          // #endif
+          // #endif  // SERIAL_DEBUG_PASCAL
           // }
         }
       }
 
       if (!file.open(fileName, O_WRONLY | O_CREAT | O_EXCL)) {
-      #ifdef SERIAL_DEBUG
+#ifdef SERIAL_DEBUG_PASCAL
         error("file.open");
-      #endif
+#endif  // SERIAL_DEBUG_PASCAL
 
       } else {
         file.println(dataString);
         file.close();
 
         // if (!file.sync() || file.getWriteError()) {
-        // #ifdef SERIAL_DEBUG
+        // #ifdef SERIAL_DEBUG_PASCAL
         //   error("write error");
-        // #endif
+        // #endif  // SERIAL_DEBUG_PASCAL
         // }
       }
     }
   }
-#endif  // SD_DATALOG
+#endif  // SD_DATALOG_PASCAL
 
 }

@@ -10,8 +10,8 @@
 #include "SdFat.h"
 
 
-#define SERIAL_DEBUG
-#define SD_DATALOG
+#define SERIAL_DEBUG_PASCAL
+#define SD_DATALOG_PASCAL
 
 
 /** I2C **/
@@ -47,7 +47,7 @@ const int offset = -5;  // Eastern Standard Time (USA)
 
 
 /** SD CARD **/
-#ifdef SD_DATALOG
+#ifdef SD_DATALOG_PASCAL
 #define error(msg) sd.errorHalt(F(msg))
 
 const uint8_t chipSelect = SS;              // SD chip select pin.  Be sure to disable any other SPI devices such as Enet.
@@ -56,22 +56,22 @@ SdFat sd;
 SdFile file;
 char fileName[20] = {'\0'};
 time_t currentFileStart = 0;
-#endif  // SD_DATALOG
+#endif  // SD_DATALOG_PASCAL
 
 
 /** SWITCHES **/
 // set pin numbers:
-const int SW1 = 39;
-const int SW2 = 38;
-const int SW3 = 37;
-const int SW4 = 36;
+const int SW1 = 15;
+const int SW2 = 14;
+const int SW3 = 39;
+const int SW4 = 38;
 int SW_array = 0;
 
 
 /** SEVSEG **/
 SevSeg sevseg; //Instantiate a seven segment controller object
-byte numDigits = 3;
-byte digitPins[] = {33, 34, 35};
+byte numDigits = 5;
+byte digitPins[] = {33, 34, 35, 36, 37};
 byte segmentPins[] = {18, 19, 22, 21, 20, 17, 16, 23};
 bool resistorsOnSegments = false;    // 'false' means resistors are on segment pins
 byte hardwareConfig = N_TRANSISTORS; // See README.md for options
