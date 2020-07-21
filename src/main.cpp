@@ -199,44 +199,40 @@ void loop() {
   sevseg.refreshDisplay(); // Must run every loop, takes 1-2 micros
 
 
-  /** SERIAL AND SD CARD **/
-#if defined(SERIAL_DEBUG_PASCAL) || defined(SD_DATALOG_PASCAL)
-  String dataString = "";
-  dataString += String(year());
-  dataString += String(month());
-  dataString += String(day());
-  dataString += " ";
-  if (hour() < 10) dataString += "0";
-  dataString += String(hour());
-  dataString += ":";
-  if (minute() < 10) dataString += "0";
-  dataString += String(minute());
-  dataString += ":";
-  if (second() < 10) dataString += "0";
-  dataString += String(second());
-  dataString += "\t";
-  dataString += String(myMPL.altitude);
-  dataString += "\t";
-  dataString += String(myIMU.yaw);
-  dataString += "\t";
-  dataString += String(myIMU.pitch);
-  dataString += "\t";
-  dataString += String(myIMU.roll);
-  dataString += "\t";
-  dataString += String(flat);
-  dataString += "\t";
-  dataString += String(flon);
-  dataString += "\t";
-  gps.crack_datetime(&Year, &Month, &Day, &Hour, &Minute, &Second, NULL, &age);
-  dataString += String(age);
-  dataString += "\t";
-  dataString += String(gps.satellites());
-#endif  // SD_DATALOG_PASCAL || SERIAL_DEBUG_PASCAL
-
-
   /** SERIAL **/
 #ifdef SERIAL_DEBUG_PASCAL
   if (now() != prevSerialDisplay) { //update the display only every second
+    String dataString = "";
+    dataString += String(year());
+    dataString += String(month());
+    dataString += String(day());
+    dataString += " ";
+    if (hour() < 10) dataString += "0";
+    dataString += String(hour());
+    dataString += ":";
+    if (minute() < 10) dataString += "0";
+    dataString += String(minute());
+    dataString += ":";
+    if (second() < 10) dataString += "0";
+    dataString += String(second());
+    dataString += "\t";
+    dataString += String(myMPL.altitude);
+    dataString += "\t";
+    dataString += String(myIMU.yaw);
+    dataString += "\t";
+    dataString += String(myIMU.pitch);
+    dataString += "\t";
+    dataString += String(myIMU.roll);
+    dataString += "\t";
+    dataString += String(flat);
+    dataString += "\t";
+    dataString += String(flon);
+    dataString += "\t";
+    gps.crack_datetime(&Year, &Month, &Day, &Hour, &Minute, &Second, NULL, &age);
+    dataString += String(age);
+    dataString += "\t";
+    dataString += String(gps.satellites());
+
     prevSerialDisplay = now();
     Serial.println(dataString);
   }
@@ -274,15 +270,46 @@ void loop() {
 #endif  // SERIAL_DEBUG_PASCAL
 
           } else {
-            file.print(F("Time/Date\tAltitude\tYaw\tPitch\tRoll\tLatitude\tLongitude\tLocAge\tSatellites"));
-            file.println();
+            file.print(F("Date,Time,Altitude,Yaw,Pitch,Roll,Latitude,Longitude,LocAge,Satellites\r\n"));
 
           }
         }
       }
 
+      String dataString = "";
+      dataString += String(year());
+      dataString += String(month());
+      dataString += String(day());
+      dataString += ",";
+      if (hour() < 10) dataString += "0";
+      dataString += String(hour());
+      dataString += ":";
+      if (minute() < 10) dataString += "0";
+      dataString += String(minute());
+      dataString += ":";
+      if (second() < 10) dataString += "0";
+      dataString += String(second());
+      dataString += ",";
+      dataString += String(myMPL.altitude);
+      dataString += ",";
+      dataString += String(myIMU.yaw);
+      dataString += ",";
+      dataString += String(myIMU.pitch);
+      dataString += ",";
+      dataString += String(myIMU.roll);
+      dataString += ",";
+      dataString += String(flat);
+      dataString += ",";
+      dataString += String(flon);
+      dataString += ",";
+      gps.crack_datetime(&Year, &Month, &Day, &Hour, &Minute, &Second, NULL, &age);
+      dataString += String(age);
+      dataString += ",";
+      dataString += String(gps.satellites());
+      dataString += "\r\n";
+
       file.seekEnd();
-      file.println(dataString);
+      file.print(dataString);
 
       if (!file.sync() || file.getWriteError()) {
 #ifdef SERIAL_DEBUG_PASCAL
