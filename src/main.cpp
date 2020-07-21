@@ -51,12 +51,12 @@ void setup() {
 
   /** SD CARD **/
 #ifdef SD_DATALOG_PASCAL
-  if (!sd.begin(chipSelect, SD_SCK_MHZ(50))) {
+  if (!sd.begin(SD_CONFIG)) {
     LED_STATE = HIGH;
     digitalWrite(LED, LED_STATE); // 1 us
 #ifdef SERIAL_DEBUG_PASCAL
-    sd.initErrorHalt();
-#endif  // SERIAL_DEBUG_PASCALb 
+    sd.initErrorHalt(&Serial);
+#endif  // SERIAL_DEBUG_PASCAL
   } else {
     LED_STATE = LOW;
     digitalWrite(LED, LED_STATE); // 1 us
@@ -200,8 +200,7 @@ void loop() {
 
 
   /** SERIAL AND SD CARD **/
-#ifdef SERIAL_DEBUG_PASCAL
-#ifdef SD_DATALOG_PASCAL
+#if defined(SERIAL_DEBUG_PASCAL) || defined(SD_DATALOG_PASCAL)
   String dataString = "";
   dataString += String(year());
   dataString += String(month());
@@ -232,8 +231,7 @@ void loop() {
   dataString += String(age);
   dataString += "\t";
   dataString += String(gps.satellites());
-#endif  // SD_DATALOG_PASCAL
-#endif  // SERIAL_DEBUG_PASCAL
+#endif  // SD_DATALOG_PASCAL || SERIAL_DEBUG_PASCAL
 
 
   /** SERIAL **/
@@ -254,41 +252,42 @@ void loop() {
       if ((currentFileStart == 0) || (hour() != hour(currentFileStart))) {
         currentFileStart = now();
 
+        if (file.isOpen()) {
+          file.close();
+        }
+
         sprintf(fileName, "%4d%02d%02d_%02d00.CSV", year(currentFileStart), month(currentFileStart), day(currentFileStart),
                 hour(currentFileStart));
 
-        if (!file.open(fileName, O_WRONLY | O_CREAT | O_EXCL)) {
+        if (sd.exists(fileName)) {
+          if (!file.open(fileName, FILE_WRITE)) {
 #ifdef SERIAL_DEBUG_PASCAL
-          error("file.open");
+          error("open failed");
 #endif  // SERIAL_DEBUG_PASCAL
 
-        } else {
-          file.print(F("Time/Date\tAltitude\tYaw\tPitch\tRoll\tLatitude\tLongitude\tLocAge\tSatellites"));
-          file.println();
-          file.close();
+          }
 
-          // if (!file.sync() || file.getWriteError()) {
-          // #ifdef SERIAL_DEBUG_PASCAL
-          //   error("write error");
-          // #endif  // SERIAL_DEBUG_PASCAL
-          // }
+        } else {
+          if (!file.open(fileName, FILE_WRITE)) {
+#ifdef SERIAL_DEBUG_PASCAL
+            error("open failed");
+#endif  // SERIAL_DEBUG_PASCAL
+
+          } else {
+            file.print(F("Time/Date\tAltitude\tYaw\tPitch\tRoll\tLatitude\tLongitude\tLocAge\tSatellites"));
+            file.println();
+
+          }
         }
       }
 
-      if (!file.open(fileName, O_WRONLY | O_CREAT | O_EXCL)) {
+      file.seekEnd();
+      file.println(dataString);
+
+      if (!file.sync() || file.getWriteError()) {
 #ifdef SERIAL_DEBUG_PASCAL
-        error("file.open");
+        error("write error");
 #endif  // SERIAL_DEBUG_PASCAL
-
-      } else {
-        file.println(dataString);
-        file.close();
-
-        // if (!file.sync() || file.getWriteError()) {
-        // #ifdef SERIAL_DEBUG_PASCAL
-        //   error("write error");
-        // #endif  // SERIAL_DEBUG_PASCAL
-        // }
       }
     }
   }
