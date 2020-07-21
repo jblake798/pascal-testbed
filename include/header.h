@@ -9,9 +9,12 @@
 #include "SevSeg.h"
 #include "SdFat.h"
 
-
+// this process takes 250us, currently (dependent on size of dataString)
 #define SERIAL_DEBUG_PASCAL
-#define SD_DATALOG_PASCAL
+
+// this process takes up to 16ms. Sometimes double this time for two iterations.
+// only use if timing not crucial or if logging sporadically.
+// #define SD_DATALOG_PASCAL
 
 
 /** I2C **/

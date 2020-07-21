@@ -125,7 +125,7 @@ void loop() {
     pressure_timer = 0;
 
     // command will force a sample to be taken. update rate is still important
-    myMPL.readAltitude(); // 696us at 400kHz i2c rate
+    myMPL.readAltitude(); // takes 696us at 400kHz i2c rate
   }
 
 
@@ -133,6 +133,7 @@ void loop() {
   // must run repeatedly. should only take 3us at most, but must run at at least 1Hz
   while (gpsPort.available()) {
     if (gps.encode(gpsPort.read())) {
+      gps.f_get_position(&flat, &flon, &age);
       gps.crack_datetime(&Year, &Month, &Day, &Hour, &Minute, &Second, NULL, &age);
       if (age < 500) {
         // set the Time to the latest GPS reading
@@ -201,10 +202,13 @@ void loop() {
 
   /** SERIAL **/
 #ifdef SERIAL_DEBUG_PASCAL
+  // takes 250-280us, depending on size of variables (highly dependent on this)
   if (now() != prevSerialDisplay) { //update the display only every second
     String dataString = "";
     dataString += String(year());
+    if (month() < 10) dataString += "0";
     dataString += String(month());
+    if (day() < 10) dataString += "0";
     dataString += String(day());
     dataString += " ";
     if (hour() < 10) dataString += "0";
@@ -243,6 +247,9 @@ void loop() {
 #ifdef SD_DATALOG_PASCAL
   if ((timeStatus() != timeNotSet) && (year() >= 2020)) {   // log data only if gps connection has been established / time is set
     if (now() != prevSDRecord) {   // log data only if the time has changed (every second)
+      // this process takes up to 16ms. Sometimes double this time for two iterations.
+      // only use if timing not crucial or if logging sporadically.
+
       prevSDRecord = now();
 
       if ((currentFileStart == 0) || (hour() != hour(currentFileStart))) {
@@ -278,7 +285,9 @@ void loop() {
 
       String dataString = "";
       dataString += String(year());
+      if (month() < 10) dataString += "0";
       dataString += String(month());
+      if (day() < 10) dataString += "0";
       dataString += String(day());
       dataString += ",";
       if (hour() < 10) dataString += "0";
@@ -309,9 +318,9 @@ void loop() {
       dataString += "\r\n";
 
       file.seekEnd();
-      file.print(dataString);
+      file.print(dataString); // takes 1.2ms, sometimes double
 
-      if (!file.sync() || file.getWriteError()) {
+      if (!file.sync() || file.getWriteError()) { // takes 14.5ms
 #ifdef SERIAL_DEBUG_PASCAL
         error("write error");
 #endif  // SERIAL_DEBUG_PASCAL
