@@ -20,10 +20,4 @@ Optimize: Fastest **(UNKNOWN HOW TO CHANGE THIS IN VSCODE)**
     2. will make the system model and kalman filter very important to get right  
 7. sensor update rates will be kept reasonable, not super fast  
 8. serial transmission offboard will be kept minimal  
-    1. not every loop, but at predetermined rate (like 2Hz or something)  
-
-## TODO  
-- sd card recording - time how long reads and writes take  
-- set up bluetooth  
-- time an empty loop to verify processor speed  
-- write Kalman filter class  
+    1. not every loop, but at predetermined rate (like 2Hz or something) 
