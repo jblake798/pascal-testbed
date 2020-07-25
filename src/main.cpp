@@ -32,13 +32,47 @@ void setup() {
   Wire2.begin(I2C_MASTER, 0x00, I2C_PINS_3_4, I2C_PULLUP_EXT, I2C_CLOCK); // Wire bus, SCL pin 7, SDA pin 8, ext pullup, 400kHz
 
   /** IMU **/
-  myIMU.MPU9250SelfTest(myIMU.selfTest);
-  myIMU.calibrateMPU9250(myIMU.gyroBias, myIMU.accelBias);
-  myIMU.initMPU9250();
-  myIMU.initAK8963(myIMU.factoryMagCalibration);
-  myIMU.getAres();
-  myIMU.getGres();
-  myIMU.getMres();
+  byte c = myIMU.readByte(MPU9250_ADDRESS, WHO_AM_I_MPU9250);
+  byte d = myIMU.readByte(AK8963_ADDRESS, WHO_AM_I_AK8963);
+
+  if ((c == 0x71) && (d == 0x48)) {    // WHO_AM_I should always be these values for each
+
+#ifdef SERIAL_DEBUG_PASCAL
+    Serial.println(F("MPU9250 is online..."));
+#endif  // SERIAL_DEBUG_PASCAL
+
+    myIMU.MPU9250SelfTest(myIMU.selfTest);
+
+#ifdef SERIAL_DEBUG_PASCAL
+    Serial.print(F("x-axis self test: acceleration trim within : "));
+    Serial.print(myIMU.selfTest[0],1); Serial.println("% of factory value");
+    Serial.print(F("y-axis self test: acceleration trim within : "));
+    Serial.print(myIMU.selfTest[1],1); Serial.println("% of factory value");
+    Serial.print(F("z-axis self test: acceleration trim within : "));
+    Serial.print(myIMU.selfTest[2],1); Serial.println("% of factory value");
+    Serial.print(F("x-axis self test: gyration trim within : "));
+    Serial.print(myIMU.selfTest[3],1); Serial.println("% of factory value");
+    Serial.print(F("y-axis self test: gyration trim within : "));
+    Serial.print(myIMU.selfTest[4],1); Serial.println("% of factory value");
+    Serial.print(F("z-axis self test: gyration trim within : "));
+    Serial.print(myIMU.selfTest[5],1); Serial.println("% of factory value");
+#endif  // SERIAL_DEBUG_PASCAL
+
+    myIMU.calibrateMPU9250(myIMU.gyroBias, myIMU.accelBias);
+    myIMU.initMPU9250();    
+    myIMU.initAK8963(myIMU.factoryMagCalibration);
+    myIMU.getAres();
+    myIMU.getGres();
+    myIMU.getMres();
+
+  } else {
+
+#ifdef SERIAL_DEBUG_PASCAL
+    if (c != 0x71) Serial.println(F("MPU9250 connection failed!"));
+    if (d != 0x48) Serial.println(F("AK8963 connection failed!"));
+#endif  // SERIAL_DEBUG_PASCAL
+
+  }
 
   /** ALTIMETER **/
   myMPL.begin(Wire2, MPL3115A2_ADDRESS);    // get sensor online
