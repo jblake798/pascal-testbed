@@ -41,6 +41,8 @@ void setup() {
     Serial.println(F("MPU9250 is online..."));
 #endif  // SERIAL_DEBUG_PASCAL
 
+    delay(IMU_CALIBRATE_DELAY);
+
     myIMU.MPU9250SelfTest(myIMU.selfTest);
 
 #ifdef SERIAL_DEBUG_PASCAL
