@@ -33,9 +33,8 @@ void setup() {
 
   /** IMU **/
   byte c = myIMU.readByte(MPU9250_ADDRESS, WHO_AM_I_MPU9250);
-  byte d = myIMU.readByte(AK8963_ADDRESS, WHO_AM_I_AK8963);
 
-  if ((c == 0x71) && (d == 0x48)) {    // WHO_AM_I should always be these values for each
+  if (c == 0x71)  {    // WHO_AM_I should always be this value
 
 #ifdef SERIAL_DEBUG_PASCAL
     Serial.println(F("MPU9250 is online..."));
@@ -62,7 +61,18 @@ void setup() {
 
     myIMU.calibrateMPU9250(myIMU.gyroBias, myIMU.accelBias);
     myIMU.initMPU9250();    
-    myIMU.initAK8963(myIMU.factoryMagCalibration);
+
+    byte d = myIMU.readByte(AK8963_ADDRESS, WHO_AM_I_AK8963);
+    if (d == 0x48)  {
+      myIMU.initAK8963(myIMU.factoryMagCalibration);
+
+    } else {
+#ifdef SERIAL_DEBUG_PASCAL
+      Serial.println(F("AK8963 connection failed!"));
+#endif  // SERIAL_DEBUG_PASCAL
+
+    }
+    
     myIMU.getAres();
     myIMU.getGres();
     myIMU.getMres();
@@ -70,8 +80,7 @@ void setup() {
   } else {
 
 #ifdef SERIAL_DEBUG_PASCAL
-    if (c != 0x71) Serial.println(F("MPU9250 connection failed!"));
-    if (d != 0x48) Serial.println(F("AK8963 connection failed!"));
+    Serial.println(F("MPU9250 connection failed!"));
 #endif  // SERIAL_DEBUG_PASCAL
 
   }
