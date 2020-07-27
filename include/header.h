@@ -2,7 +2,7 @@
 #include <i2c_t3.h>
 #include <TimeLib.h>
 #include <TinyGPS.h>
-#include <SPI.h>
+#include <SoftwareSerial.h>
 #include "SparkFunMPL3115A2.h"
 #include "MPU9250.h"
 #include "quaternionFilters.h"
@@ -12,9 +12,12 @@
 // this process takes 250us, currently (dependent on size of dataString)
 #define SERIAL_DEBUG_PASCAL
 
-// this process takes up to 16ms. Sometimes double this time for two iterations.
-// only use if timing not crucial or if logging sporadically.
+/* this process takes up to 16ms. Sometimes double this time for two iterations.
+ * only use if timing not crucial or if logging sporadically.
+ */
 // #define SD_DATALOG_PASCAL
+
+#define BLUETOOTH_PASCAL
 
 
 /** I2C **/

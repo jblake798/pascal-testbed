@@ -5,7 +5,7 @@ void setup() {
 
   /** SERIAL **/
 #ifdef SERIAL_DEBUG_PASCAL
-  Serial.begin(9600);
+  Serial.begin(115200);
   while (!Serial);
 
   Serial.println(F("Type any character to start..."));
@@ -13,6 +13,17 @@ void setup() {
 
   Serial.println(F("Beginning sketch!"));
 #endif  // SERIAL_DEBUG_PASCAL
+
+  /** BLUETOOTH **/
+#ifdef BLUETOOTH_PASCAL
+  Serial3.begin(115200);
+  while (!Serial3);
+
+  Serial3.println(F("Type any character to start..."));
+  while (!Serial.available());
+
+  Serial3.println(F("Beginning sketch!"));
+#endif // BLUETOOTH_PASCAL
 
   /** SWITCHES **/
   pinMode(SW1, INPUT_PULLUP);
