@@ -5,7 +5,7 @@
 #include <SPI.h>
 #include "SparkFunMPL3115A2.h"
 #include "MPU9250.h"
-#include "quaternionFilters.h"
+// #include "quaternionFilters.h"
 #include "SevSeg.h"
 #include "SdFat.h"
 
@@ -22,11 +22,13 @@
 
 
 /** IMU **/
-#define MPU9250_ADDRESS MPU9250_ADDRESS_AD0
-#define IMU_FILTER_TYPE MADGWICK_FILTER
+#define MPU9250_ADDRESS 0x68
 #define IMU_CALIBRATE_DELAY 1000
 
-MPU9250 myIMU(MPU9250_ADDRESS, Wire2, I2C_CLOCK);
+MPU9250 myIMU(Wire2, MPU9250_ADDRESS);
+int IMUstatus;
+const int IMUint = 5;
+void getIMU();
 
 
 /** ALTIMETER **/

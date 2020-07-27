@@ -32,56 +32,34 @@ void setup() {
   Wire2.begin(I2C_MASTER, 0x00, I2C_PINS_3_4, I2C_PULLUP_EXT, I2C_CLOCK); // Wire bus, SCL pin 7, SDA pin 8, ext pullup, 400kHz
 
   /** IMU **/
-  byte c = myIMU.readByte(MPU9250_ADDRESS, WHO_AM_I_MPU9250);
-
-  if (c == 0x71)  {    // WHO_AM_I should always be this value
-
+  IMUstatus = myIMU.begin();
+  if (IMUstatus < 0) {
 #ifdef SERIAL_DEBUG_PASCAL
-    Serial.println(F("MPU9250 is online..."));
+    Serial.println("IMU initialization unsuccessful");
+    Serial.println("Check IMU wiring or try cycling power");
+    Serial.print("Status: ");
+    Serial.println(IMUstatus);
 #endif  // SERIAL_DEBUG_PASCAL
-
-    delay(IMU_CALIBRATE_DELAY);
-
-    myIMU.MPU9250SelfTest(myIMU.selfTest);
-
-#ifdef SERIAL_DEBUG_PASCAL
-    Serial.print(F("x-axis self test: acceleration trim within : "));
-    Serial.print(myIMU.selfTest[0],1); Serial.println("% of factory value");
-    Serial.print(F("y-axis self test: acceleration trim within : "));
-    Serial.print(myIMU.selfTest[1],1); Serial.println("% of factory value");
-    Serial.print(F("z-axis self test: acceleration trim within : "));
-    Serial.print(myIMU.selfTest[2],1); Serial.println("% of factory value");
-    Serial.print(F("x-axis self test: gyration trim within : "));
-    Serial.print(myIMU.selfTest[3],1); Serial.println("% of factory value");
-    Serial.print(F("y-axis self test: gyration trim within : "));
-    Serial.print(myIMU.selfTest[4],1); Serial.println("% of factory value");
-    Serial.print(F("z-axis self test: gyration trim within : "));
-    Serial.print(myIMU.selfTest[5],1); Serial.println("% of factory value");
-#endif  // SERIAL_DEBUG_PASCAL
-
-    myIMU.calibrateMPU9250(myIMU.gyroBias, myIMU.accelBias);
-    myIMU.initMPU9250();    
-
-    byte d = myIMU.readByte(AK8963_ADDRESS, WHO_AM_I_AK8963);
-    if (d == 0x48)  {
-      myIMU.initAK8963(myIMU.factoryMagCalibration);
-
-    } else {
-#ifdef SERIAL_DEBUG_PASCAL
-      Serial.println(F("AK8963 connection failed!"));
-#endif  // SERIAL_DEBUG_PASCAL
-
-    }
-    
-    myIMU.getAres();
-    myIMU.getGres();
-    myIMU.getMres();
 
   } else {
-
-#ifdef SERIAL_DEBUG_PASCAL
-    Serial.println(F("MPU9250 connection failed!"));
-#endif  // SERIAL_DEBUG_PASCAL
+    // setting the accelerometer full scale range to +/-16G 
+    myIMU.setAccelRange(MPU9250::ACCEL_RANGE_16G);
+    // setting the gyroscope full scale range to +/-2000 deg/s
+    myIMU.setGyroRange(MPU9250::GYRO_RANGE_2000DPS);
+    // setting DLPF bandwidth to 41 Hz
+    myIMU.setDlpfBandwidth(MPU9250::DLPF_BANDWIDTH_41HZ);
+    // setting SRD to 9 for a 100 Hz update rate
+    myIMU.setSrd(9);
+    // set Accelerometer biases and scaling
+    myIMU.setAccelCalX(0.25805569, 1.00042164);
+    myIMU.setAccelCalY(0.07447767, 1.00316799);
+    myIMU.setAccelCalZ(0.19314232, 0.97985035);
+    // set Magnetometer biases and scaling (refine with MPU9250Calibration.ino util when battery pack arrives)
+    // myIMU.setMagCalX(28.55860519, 1.19339991);
+    // myIMU.setMagCalY(31.16550255, 1.51063430);
+    // myIMU.setMagCalZ(20.59740067, 0.66662914);
+    // set up IMU interrupts
+    myIMU.enableDataReadyInterrupt(); // can attach interrupt pin to processor interrupt routine
 
   }
 
@@ -121,48 +99,14 @@ void setup() {
 
 void loop() {
 
-  /** IMU **/
-  if (myIMU.readByte(MPU9250_ADDRESS, INT_STATUS) & 0x01) { // takes 615us, runs at about 200Hz (every 5ms)
-    myIMU.readAccelData(myIMU.accelCount);  // takes 247us
-    myIMU.ax = (float)myIMU.accelCount[0] * myIMU.aRes; // - myIMU.accelBias[0];
-    myIMU.ay = (float)myIMU.accelCount[1] * myIMU.aRes; // - myIMU.accelBias[1];
-    myIMU.az = (float)myIMU.accelCount[2] * myIMU.aRes; // - myIMU.accelBias[2];
-    myIMU.readGyroData(myIMU.gyroCount);  // takes 247us
-    myIMU.gx = (float)myIMU.gyroCount[0] * myIMU.gRes;
-    myIMU.gy = (float)myIMU.gyroCount[1] * myIMU.gRes;
-    myIMU.gz = (float)myIMU.gyroCount[2] * myIMU.gRes;
-    myIMU.readMagData(myIMU.magCount);  // takes 121us
-    myIMU.mx = (float)myIMU.magCount[0] * myIMU.mRes
-               * myIMU.factoryMagCalibration[0] - myIMU.magBias[0];
-    myIMU.my = (float)myIMU.magCount[1] * myIMU.mRes
-               * myIMU.factoryMagCalibration[1] - myIMU.magBias[1];
-    myIMU.mz = (float)myIMU.magCount[2] * myIMU.mRes
-               * myIMU.factoryMagCalibration[2] - myIMU.magBias[2];
+  /** IMU **/ // takes 622us. can also be triggered by interrupt.
+  if (myIMU.checkInterrupt()) {
+    myIMU.readSensor();
   }
 
 
-  /** IMU FILTER **/ // (RUNS EVERY LOOP, takes 83us at most, runs at 5000Hz (every 200us), with some gaps when sensor data taken)
-  myIMU.updateTime();
-  MahonyQuaternionUpdate(myIMU.ax, myIMU.ay, myIMU.az, myIMU.gx * DEG_TO_RAD,
-                         myIMU.gy * DEG_TO_RAD, myIMU.gz * DEG_TO_RAD, myIMU.my,
-                         myIMU.mx, myIMU.mz, myIMU.deltat);
-  myIMU.yaw   = atan2(2.0f * (*(getQ() + 1) * *(getQ() + 2) + *getQ()
-                              * *(getQ() + 3)), *getQ() * *getQ() + * (getQ() + 1)
-                      * *(getQ() + 1) - * (getQ() + 2) * *(getQ() + 2) - * (getQ() + 3)
-                      * *(getQ() + 3));
-  myIMU.pitch = -asin(2.0f * (*(getQ() + 1) * *(getQ() + 3) - *getQ()
-                              * *(getQ() + 2)));
-  myIMU.roll  = atan2(2.0f * (*getQ() * *(getQ() + 1) + * (getQ() + 2)
-                              * *(getQ() + 3)), *getQ() * *getQ() - * (getQ() + 1)
-                      * *(getQ() + 1) - * (getQ() + 2) * *(getQ() + 2) + * (getQ() + 3)
-                      * *(getQ() + 3));
-  myIMU.pitch *= RAD_TO_DEG;
-  myIMU.yaw   *= RAD_TO_DEG;
+  // /** IMU FILTER **/ // (RUNS EVERY LOOP)
 
-  // Current Location: Research Park, Huntsville, Alabama
-  // Current Declination: +3.783333 ±0.3666667 degrees (changing +0.06666667 degrees per year)
-  myIMU.yaw  += 3.783333;
-  myIMU.roll *= RAD_TO_DEG;
 
 
   /** ALTIMETER **/
@@ -217,13 +161,13 @@ void loop() {
         sevseg.setNumber(timer_result);
         break;
       case 6:
-        sevseg.setNumber(myIMU.yaw, 1);
+        sevseg.setNumber(myIMU.getAccelX_mss(), 1);
         break;
       case 7:
-        sevseg.setNumber(myIMU.pitch, 1);
+        sevseg.setNumber(myIMU.getAccelY_mss(), 1);
         break;
       case 8:
-        sevseg.setNumber(myIMU.roll, 1);
+        sevseg.setNumber(myIMU.getAccelZ_mss(), 1);
         break;
       case 9:
       case 10:
@@ -267,11 +211,11 @@ void loop() {
     dataString += "\t";
     dataString += String(myMPL.altitude);
     dataString += "\t";
-    dataString += String(myIMU.yaw);
+    dataString += String(myIMU.getAccelX_mss());
     dataString += "\t";
-    dataString += String(myIMU.pitch);
+    dataString += String(myIMU.getAccelY_mss());
     dataString += "\t";
-    dataString += String(myIMU.roll);
+    dataString += String(myIMU.getAccelZ_mss());
     dataString += "\t";
     dataString += String(flat);
     dataString += "\t";
