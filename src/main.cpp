@@ -51,10 +51,10 @@ void setup() {
     // setting SRD to 9 for a 100 Hz update rate
     myIMU.setSrd(9);
     // set Accelerometer biases and scaling
-    myIMU.setAccelCalX(0.25805569, 1.00042164);
-    myIMU.setAccelCalY(0.07447767, 1.00316799);
-    myIMU.setAccelCalZ(0.19314232, 0.97985035);
-    // set Magnetometer biases and scaling (refine with MPU9250Calibration.ino util when battery pack arrives)
+    myIMU.setAccelCalX(0.2522, 1.0022);
+    myIMU.setAccelCalY(0.0933, 1.0008);
+    myIMU.setAccelCalZ(0.1208, 0.9803);
+    // set Magnetometer biases and scaling (TODO: refine with MPU9250Calibration.ino util when battery pack arrives)
     // myIMU.setMagCalX(28.55860519, 1.19339991);
     // myIMU.setMagCalY(31.16550255, 1.51063430);
     // myIMU.setMagCalZ(20.59740067, 0.66662914);
