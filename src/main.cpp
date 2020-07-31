@@ -75,13 +75,13 @@ void setup() {
   /** SD CARD **/
 #ifdef SD_DATALOG_PASCAL
   if (!sd.begin(SD_CONFIG)) {
-    LED_STATE = HIGH;
+    LED_STATE = LOW;
     digitalWrite(LED, LED_STATE); // 1 us
 #ifdef SERIAL_DEBUG_PASCAL
     sd.initErrorHalt(&Serial);
 #endif  // SERIAL_DEBUG_PASCAL
   } else {
-    LED_STATE = LOW;
+    LED_STATE = HIGH;
     digitalWrite(LED, LED_STATE); // 1 us
   }
 #endif  // SD_DATALOG_PASCAL
@@ -290,11 +290,11 @@ void loop() {
       dataString += ",";
       dataString += String(myMPL.altitude);
       dataString += ",";
-      dataString += String(myIMU.yaw);
+      dataString += String(myIMU.getAccelX_mss());
       dataString += ",";
-      dataString += String(myIMU.pitch);
+      dataString += String(myIMU.getAccelY_mss());
       dataString += ",";
-      dataString += String(myIMU.roll);
+      dataString += String(myIMU.getAccelZ_mss());
       dataString += ",";
       dataString += String(flat);
       dataString += ",";
