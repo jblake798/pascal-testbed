@@ -5,7 +5,6 @@
 #include <SPI.h>
 #include "SparkFunMPL3115A2.h"
 #include "MPU9250.h"
-// #include "quaternionFilters.h"
 #include "SevSeg.h"
 #include "SdFat.h"
 
